@@ -32,8 +32,8 @@ class PerceptronClassifier:
             self.weights[label] = util.Counter() # this is the data-structure you should use
 
     def setWeights(self, weights):
-        assert len(weights) == len(self.legalLabels);
-        self.weights = weights;
+        assert len(weights) == len(self.legalLabels)
+        self.weights = weights
 
     def train( self, trainingData, trainingLabels, validationData, validationLabels ):
         """
@@ -60,7 +60,14 @@ class PerceptronClassifier:
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
                 "*** YOUR CODE HERE ***"
-                util.raiseNotDefined()
+                scores = util.Counter()
+                for label in self.legalLabels:
+                    scores[label] = self.weights[label] * trainingData[label]
+                newLabel = scores.argMax()
+                if newLabel != trainingLabels[i]:
+                    self.weights[trainingLabels[i]] += trainingData[i]
+                    self.weights[newLabel] -= trainingData[i]
+
 
     def classify(self, data ):
         """
@@ -88,6 +95,5 @@ class PerceptronClassifier:
         featuresWeights = []
 
         "*** YOUR CODE HERE ***"
-        util.raiseNotDefined()
-
+        featuresWeights = self.weights[label].sortedKeys()[:100]
         return featuresWeights
