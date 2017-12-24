@@ -81,11 +81,29 @@ def enhancedFeatureExtractorDigit(datum):
     features =  basicFeatureExtractorDigit(datum)
 
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
+    pix = datum.getPixels()
+    pixSize = DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT
+
+    def calNeerWhiteRegion(d, x, y):
+        if d.getPixel(x-1, y) + d.getPixel(x+1, y) + d.getPixel(x, y) + d.getPixel(x, y+1) + d.getPixel(x, y-1) > 0:
+            return 1
+        else:
+            return 0
+
+    for x in range(1, DIGIT_DATUM_WIDTH - 1):
+        for y in range(0, DIGIT_DATUM_HEIGHT - 1):
+            features['white region', x, y] = calNeerWhiteRegion(datum, x, y)
+
+    # for x in range(DIGIT_DATUM_WIDTH):
+    #     for y in range(1, DIGIT_DATUM_HEIGHT - 1):
+    #         if datum.getPixel(x, y) + datum.getPixel(x, y + 1) + datum.getPixel(x, y-1) > 2:
+    #             features['horizontal', x, y] = 1
+    #         else:
+    #             features['horizontal', x, y] = 0
+    # features[0:pixSize] = sum([pix[x][y] for x in range(DIGIT_DATUM_WIDTH) for y in range(DIGIT_DATUM_HEIGHT)])
 
     return features
-
-
 
 def basicFeatureExtractorPacman(state):
     """
@@ -209,9 +227,9 @@ class ImagePrinter:
         image = samples.Datum(None,self.width,self.height)
         for pix in pixels:
             try:
-            # This is so that new features that you could define which
-            # which are not of the form of (x,y) will not break
-            # this image printer...
+                # This is so that new features that you could define which
+                # which are not of the form of (x,y) will not break
+                # this image printer...
                 x,y = pix
                 image.pixels[x][y] = 2
             except:
@@ -372,7 +390,7 @@ def runClassifier(args, options):
     featureFunction = args['featureFunction']
     classifier = args['classifier']
     printImage = args['printImage']
-    
+
     # Load data
     numTraining = options.training
     numTest = options.test
@@ -429,7 +447,7 @@ def runClassifier(args, options):
     if((options.weights) & (options.classifier == "perceptron")):
         for l in classifier.legalLabels:
             features_weights = classifier.findHighWeightFeatures(l)
-            print ("=== Features with high weight for label %d ==="%l)
+            print ("=== Features with high weight for label %d ===" %l)
             printImage(features_weights)
 
 if __name__ == '__main__':

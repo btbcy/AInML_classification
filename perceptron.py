@@ -56,6 +56,10 @@ class PerceptronClassifier:
         # DO NOT ZERO OUT YOUR WEIGHTS BEFORE STARTING TRAINING, OR
         # THE AUTOGRADER WILL LIKELY DEDUCT POINTS.
 
+        # from random import shuffle
+        # training = {trainingLabels[i]:trainingData[i] for i in range(len(trainingData))}
+        # shuffle(trainingLabels, lambda: 0)
+        # trainingData = [training[trainingLabels[i]] for i in range(len(trainingLabels))]
         for iteration in range(self.max_iterations):
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
