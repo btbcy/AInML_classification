@@ -84,24 +84,116 @@ def enhancedFeatureExtractorDigit(datum):
 
     pix = datum.getPixels()
     pixSize = DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT
-
-    def calNeerWhiteRegion(d, x, y):
-        if d.getPixel(x-1, y) + d.getPixel(x+1, y) + d.getPixel(x, y) + d.getPixel(x, y+1) + d.getPixel(x, y-1) > 0:
-            return 1
-        else:
-            return 0
+    digitNum = 0
+    for x in range(DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT):
+            digitNum += pix[x][y]
 
     for x in range(1, DIGIT_DATUM_WIDTH - 1):
-        for y in range(0, DIGIT_DATUM_HEIGHT - 1):
-            features['white region', x, y] = calNeerWhiteRegion(datum, x, y)
+        for y in range(1, DIGIT_DATUM_HEIGHT - 1):
+            if pix[x-1][y] > 0 or pix[x+1][y] > 0 or pix[x][y] > 0 or pix[x][y-1] > 0 or pix[x][y+1] > 0:
+                features['empty_region', x, y] = 1
+            else:
+                features['empty_region', x, y] = 0
+
+    for x in range(DIGIT_DATUM_WIDTH):
+        hasDig = sum([pix[x][y] for y in range(DIGIT_DATUM_HEIGHT)]) > 0
+        upperEmpty, lowerEmpty = -1, -1
+        upperConnected, lowerConnected = -1, -1
+        if hasDig:
+            for y in range(DIGIT_DATUM_HEIGHT - 1):
+                if pix[x][y] > 0 and pix[x][y+1] == 0:
+                    upperEmpty = y
+                    break
+            for y in range(upperEmpty + 1, DIGIT_DATUM_HEIGHT - 1):
+                if pix[x][y] == 0 and pix[x][y+1] > 0:
+                    lowerEmpty = y + 1
+        if lowerEmpty >= 0 and upperEmpty >= 0:
+            for i in range(1, DIGIT_DATUM_HEIGHT - 2):
+                features['horizontal_hole', x, i] = 1 if lowerEmpty - upperEmpty == i else 0
+        features['horizontal_hole', x, 0] = 1 if lowerEmpty >= 0 and upperEmpty >= 0 else 0
+
+    for y in range(DIGIT_DATUM_HEIGHT):
+        hasDig = sum([pix[x][y] for x in range(DIGIT_DATUM_WIDTH)]) > 0
+        leftEmpty, rightEmpty = -1, -1
+        if hasDig:
+            for x in range(DIGIT_DATUM_WIDTH - 1):
+                if pix[x][y] > 0 and pix[x+1][y] == 0:
+                    leftEmpty = x
+                    break
+            for x in range(leftEmpty + 1, DIGIT_DATUM_WIDTH - 1):
+                if pix[x][y] == 0 and pix[x+1][y] > 0:
+                    rightEmpty = x + 1
+        if rightEmpty >= 0 and leftEmpty >= 0:
+            for i in range(1, DIGIT_DATUM_WIDTH - 2):
+                features['vertical_hole', i, y] = 1 if rightEmpty - leftEmpty == 0 else 0
+        features['vertical_hole', 0, y] = 1 if rightEmpty >= 0 and leftEmpty >= 0 else 0
 
     # for x in range(DIGIT_DATUM_WIDTH):
-    #     for y in range(1, DIGIT_DATUM_HEIGHT - 1):
-    #         if datum.getPixel(x, y) + datum.getPixel(x, y + 1) + datum.getPixel(x, y-1) > 2:
+    #     for y in range(DIGIT_DATUM_HEIGHT / 2):
+    #         if (pix[x][y] == 0 & pix[x][DIGIT_DATUM_HEIGHT - y - 1] == 0)\
+    #                 or (pix[x][y] > 0 & pix[x][DIGIT_DATUM_HEIGHT - y - 1] > 0):
+    #             features['vertical', x, y] = 1 
+    #         else:
+    #             features['vertical', x, y] = 0
+
+    # for x in range(DIGIT_DATUM_WIDTH / 2):
+    #     for y in range(DIGIT_DATUM_HEIGHT):
+    #         if (pix[x][y] == 0 & pix[DIGIT_DATUM_WIDTH -x - 1][y] == 0)\
+    #                 or (pix[x][y] > 0 & pix[DIGIT_DATUM_WIDTH -x -1][y] > 0):
     #             features['horizontal', x, y] = 1
     #         else:
     #             features['horizontal', x, y] = 0
-    # features[0:pixSize] = sum([pix[x][y] for x in range(DIGIT_DATUM_WIDTH) for y in range(DIGIT_DATUM_HEIGHT)])
+
+    # for x in range(DIGIT_DATUM_WIDTH / 2):
+    #     for y in range(DIGIT_DATUM_HEIGHT / 2):
+    #         if (pix[x][y] == 0 & pix[DIGIT_DATUM_WIDTH - x - 1][DIGIT_DATUM_HEIGHT - y - 1] == 0)\
+    #                 or (pix[x][y] > 0 & pix[DIGIT_DATUM_WIDTH - x - 1][DIGIT_DATUM_HEIGHT - y - 1] > 0):
+    #             features['diagonal', x, y] = 1
+    #         else:
+    #             features['diagonal', x, y] = 0
+
+    upperNum, lowerNum = 0.0, 0.0
+    for x in range(DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT / 2):
+            upperNum += pix[x][y]
+    for x in range(DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT / 2, DIGIT_DATUM_HEIGHT):
+            lowerNum += pix[x][y]
+    upper_ratio = upperNum * 1.0 / digitNum
+    for i in range(5):
+        features['upper_ratio_' + str(i)] = 1 if upper_ratio > 0.42 else 0
+    horsy_ratio = (upperNum - lowerNum) / digitNum
+    for i in range(10):
+        features['horizontal_sy_' + str(i)] = 1 if horsy_ratio > -0.15 and horsy_ratio < 0.1 else 0
+
+    leftNum, righttNum = 0.0, 0.0
+    for y in range(DIGIT_DATUM_HEIGHT):
+        for x in range(DIGIT_DATUM_WIDTH / 2):
+            leftNum += pix[x][y]
+    for y in range(DIGIT_DATUM_HEIGHT):
+        for x in range(DIGIT_DATUM_WIDTH / 2, DIGIT_DATUM_WIDTH):
+            righttNum += pix[x][y]
+    versy_ratio = (leftNum - righttNum) / digitNum
+    for i in range(10):
+        features['vertical_sy_' + str(i)] = 1 if versy_ratio > -0.25 and versy_ratio < 0.05 else 0
+
+    leftlowNum, rightupNum = 0.0, 0.0
+    for x in range(DIGIT_DATUM_WIDTH / 2):
+        for y in range(DIGIT_DATUM_HEIGHT / 2):
+            leftlowNum += pix[x][y]
+    for x in range(DIGIT_DATUM_WIDTH / 2, DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT / 2, DIGIT_DATUM_HEIGHT):
+            rightupNum += pix[x][y]
+    leftlow_ratio = leftlowNum * 1.0 / digitNum
+    for i in range(10):
+        features['leftlow_' + str(i)] = 1 if leftlow_ratio > 0.8 else 0
+    rightupNum_ratio = rightupNum * 1.0 / digitNum
+    for i in range(5):
+        features['rightup_' + str(i)] = 1 if rightupNum_ratio < 0.42 else 0
+    llru_ratio = (leftlowNum - rightupNum) / digitNum
+    for i in range(10):
+        features['llru_' + str(i)] = 1 if llru_ratio > -0.18 else 0
 
     return features
 

@@ -64,13 +64,15 @@ class PerceptronClassifier:
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
                 "*** YOUR CODE HERE ***"
-                scores = util.Counter()
-                for label in self.legalLabels:
-                    scores[label] = self.weights[label] * trainingData[label]
-                newLabel = scores.argMax()
-                if newLabel != trainingLabels[i]:
-                    self.weights[trainingLabels[i]] += trainingData[i]
-                    self.weights[newLabel] -= trainingData[i]
+                # scores = util.Counter()
+                # for label in self.legalLabels:
+                #     scores[label] = self.weights[label] * trainingData[label]
+                # guess = scores.argMax()
+                feat = trainingData[i]
+                guess = self.classify([feat])[0]
+                if guess != trainingLabels[i]:
+                    self.weights[trainingLabels[i]] += feat
+                    self.weights[guess] -= feat
 
 
     def classify(self, data ):
