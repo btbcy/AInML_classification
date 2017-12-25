@@ -89,14 +89,19 @@ def enhancedFeatureExtractorDigit(datum):
         for y in range(DIGIT_DATUM_HEIGHT):
             digitNum += pix[x][y]
 
-    def calEmpty(d, x, y):
-        if d.getPixel(x-1, y) + d.getPixel(x+1, y) + d.getPixel(x, y) + d.getPixel(x, y+1) + d.getPixel(x, y-1) > 0:
-            return 1
-        return 0
-
     for x in range(1, DIGIT_DATUM_WIDTH - 1):
-        for y in range(0, DIGIT_DATUM_HEIGHT - 1):
-            features['empty_region', x, y] = calEmpty(datum, x, y)
+        for y in range(1, DIGIT_DATUM_HEIGHT - 1):
+            if pix[x-1][y] > 0 or pix[x+1][y] > 0 or pix[x][y] > 0 or pix[x][y-1] > 0 or pix[x][y+1] > 0:
+                features['empty_region', x, y] = 1
+            else:
+                features['empty_region', x, y] = 0
+
+    # for x in range(1, DIGIT_DATUM_WIDTH - 1):
+    #     for y in range(1, DIGIT_DATUM_HEIGHT - 1):
+    #         if pix[x][y] > 0 and pix[x+1][y] > 0 and pix[x-1][y] > 0 and pix[x][y+1] > 0 and pix[x][y-1] > 0:
+    #             features['connected_region', x, y] = 1
+    #         else:
+    #             features['connected_region', x, y] = 0
 
     for x in range(DIGIT_DATUM_WIDTH):
         hasDig = sum([pix[x][y] for y in range(DIGIT_DATUM_HEIGHT)]) > 0
@@ -131,6 +136,19 @@ def enhancedFeatureExtractorDigit(datum):
                 features['vertical_hole', i, y] = 1 if rightEmpty - leftEmpty == 0 else 0
         features['vertical_hole', 0, y] = 1 if rightEmpty >= 0 and leftEmpty >= 0 else 0
 
+    upperNum, lowerNum = 0.0, 0.0
+    for x in range(DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT / 2):
+            upperNum += pix[x][y]
+    for x in range(DIGIT_DATUM_WIDTH):
+        for y in range(DIGIT_DATUM_HEIGHT / 2, DIGIT_DATUM_HEIGHT):
+            lowerNum += pix[x][y]
+    for i in range(2):
+        features['upper_ratio_' + str(i)] = 1 if upperNum * 1.0 / digitNum > 0.42 else 0
+
+    horsy_ratio = (upperNum - lowerNum) / digitNum
+    for i in range(10):
+        features['horizontal_sy_' + str(i)] = 1 if horsy_ratio > -0.15 and horsy_ratio < 0.1 else 0
     return features
 
 def basicFeatureExtractorPacman(state):
