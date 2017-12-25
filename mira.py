@@ -74,10 +74,11 @@ class MiraClassifier:
             newWeights = self.weights
             for iteration in range(self.max_iterations):
                 for feature, label in zip(trainingData, trainingLabels):
-                    scores = util.Counter()
-                    for l in self.legalLabels:
-                        scores[l] = self.weights[l] * feature
-                    newLabel = scores.argMax()
+                    # scores = util.Counter()
+                    # for l in self.legalLabels:
+                    #     scores[l] = self.weights[l] * feature
+                    # newLabel = scores.argMax()
+                    newLabel = self.classify([feature])[0]
                     if newLabel != label:
                         tau = min(c,
                                 ((newWeights[newLabel] - newWeights[label]) * feature + 1.0) / (2.0 * (feature * feature)))
@@ -100,6 +101,11 @@ class MiraClassifier:
                 maxCorrectNum = correctNum
                 maxWeight = newWeights
                 self.maxC = c
+            elif correctNum == maxCorrectNum:
+                if c < self.maxC:
+                    maxWeight = newWeights
+                    self.maxC = c
+
         self.weights = maxWeight
 
     def classify(self, data ):
