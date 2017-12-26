@@ -274,12 +274,12 @@ def enhancedPacmanFeatures(state, action):
     """
     features = util.Counter()
     "*** YOUR CODE HERE ***"
-    state = state.generatePacmanSuccessor(action)
+    nextState = state.generateSuccessor(0, action)
 
-    position = state.getPacmanPosition()
-    foodList = state.getFood().asList()
-    capsules = state.getCapsules()
-    ghostStates = state.getGhostStates()
+    position = nextState.getPacmanPosition()
+    foodList = nextState.getFood().asList()
+    capsules = nextState.getCapsules()
+    ghostStates = nextState.getGhostStates()
     scaredGhosts = [ghost for ghost in ghostStates if ghost.scaredTimer > 0]
     normalGhosts = [ghost for ghost in ghostStates if ghost.scaredTimer == 0]
     nearestScaredGhost = min([util.manhattanDistance(position, ghost.getPosition()) for ghost in scaredGhosts]) if scaredGhosts else 0
@@ -288,11 +288,29 @@ def enhancedPacmanFeatures(state, action):
     nearestFood = min([util.manhattanDistance(position, food) for food in foodList]) if foodList else 0
 
     WEIGHT_NORMAL_GHOST = 5.0
-    WEIGHT_SCARED_GHOST = 100.0
+    WEIGHT_SCARED_GHOST = 70.0
     WEIGHT_FOOD = 10.0
     WEIGHT_CAPSULE = 30.0
 
-    score = state.getScore()
+    # features['score'] = nextState.getScore() * 2
+    if scaredGhosts and nearestScaredGhost > 0:
+        features['scared_ghost'] = WEIGHT_SCARED_GHOST / nearestScaredGhost
+    else:
+        features['scared_ghost'] = 0
+    if normalGhosts and nearestNormalGhost > 0:
+        features['normal_ghost'] = WEIGHT_NORMAL_GHOST / nearestNormalGhost
+    else:
+        features['normal_ghost'] = 0
+    if capsules:
+        features['capsule'] = WEIGHT_CAPSULE / nearestCapsule
+    else:
+        features['capsule'] = 0
+    if foodList:
+        features['nearestFood'] = WEIGHT_FOOD / nearestFood
+    else:
+        features['nearestFood'] = 0
+    features['origin_score'] = state.getScore() * 2
+    score = nextState.getScore() * 2
     if scaredGhosts and nearestScaredGhost > 0:
         score += WEIGHT_SCARED_GHOST / nearestScaredGhost
     if normalGhosts and nearestNormalGhost > 0:
@@ -302,22 +320,6 @@ def enhancedPacmanFeatures(state, action):
     if foodList:
         score += WEIGHT_FOOD / nearestFood
     features['score'] = score
-    #if scaredGhosts and nearestScaredGhost > 0:
-    #    features['scared_ghost'] = WEIGHT_SCARED_GHOST / nearestScaredGhost
-    #else:
-    #    features['scared_ghost'] = 0
-    #if normalGhosts and nearestNormalGhost > 0:
-    #    features['normal_ghost'] = -WEIGHT_NORMAL_GHOST / nearestNormalGhost
-    #else:
-    #    features['normal_ghost'] = 0
-    #if capsules:
-    #    features['capsule'] = WEIGHT_CAPSULE / nearestCapsule
-    #else:
-    #    features['capsule'] = 0
-    #if foodList:
-    #    features['nearestFood'] = WEIGHT_FOOD / nearestFood
-    #else:
-    #    features['nearestFood'] = 0
 
     return features
 
