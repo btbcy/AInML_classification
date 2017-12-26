@@ -319,6 +319,9 @@ def enhancedPacmanFeatures(state, action):
         score += WEIGHT_CAPSULE / nearestCapsule
     if foodList:
         score += WEIGHT_FOOD / nearestFood
+    # from game import Directions
+    # if action == Directions.STOP:
+    #     score -= 10 
     features['score'] = score
 
     return features
