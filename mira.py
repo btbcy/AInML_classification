@@ -68,45 +68,50 @@ class MiraClassifier:
         ## Cgrid: a list of constant C
         """
         "*** YOUR CODE HERE ***"
-        maxWeight = None
         maxCorrectNum = -1
+        newWeights = util.Counter()
+        correctNum = util.Counter()
+        maxC = Cgrid[0]
+        maxIter = 0
         for c in Cgrid:
-            newWeights = self.weights
+            newWeights[c] = util.Counter()
+            correctNum[c] = util.Counter()
             for iteration in range(self.max_iterations):
                 for feature, label in zip(trainingData, trainingLabels):
                     # scores = util.Counter()
                     # for l in self.legalLabels:
-                    #     scores[l] = self.weights[l] * feature
+                    #     scores[l] = newWeights[l] * feature
                     # newLabel = scores.argMax()
                     newLabel = self.classify([feature])[0]
                     if newLabel != label:
                         tau = min(c,
-                                ((newWeights[newLabel] - newWeights[label]) * feature + 1.0) / (2.0 * (feature * feature)))
+                                ((self.weights[newLabel] - self.weights[label]) * feature + 1.0) / (2.0 * (feature * feature)))
                         delta = util.Counter()
                         for key, value in feature.items():
                             delta[key] = value * tau
-                        newWeights[label] += delta
-                        newWeights[newLabel] -= delta
-            correctNum = 0
-            guesses = []
-            for datum in validationData:
-                vectors = util.Counter()
-                for l in self.legalLabels:
-                    vectors[l] = newWeights[l] * datum
-                guesses.append(vectors.argMax())
-            for y, y_Pr in zip(validationLabels, guesses):
-                if y == y_Pr:
-                    correctNum += 1
-            if correctNum > maxCorrectNum:
-                maxCorrectNum = correctNum
-                maxWeight = newWeights
-                self.maxC = c
-            elif correctNum == maxCorrectNum:
-                if c < self.maxC:
-                    maxWeight = newWeights
-                    self.maxC = c
-
-        self.weights = maxWeight
+                        self.weights[label] += delta
+                        self.weights[newLabel] -= delta
+                newWeights[c][iteration] = self.weights.copy()
+                correctNum[c][iteration] = 0
+                guesses = self.classify(validationData)
+                # guesses = []
+                # for datum in validationData:
+                #     vectors = util.Counter()
+                #     for l in self.legalLabels:
+                #         vectors[l] = newWeights[l] * datum
+                #     guesses.append(vectors.argMax())
+                for y, y_Pr in zip(validationLabels, guesses):
+                    if y == y_Pr:
+                        correctNum[c][iteration] += 1
+                if correctNum[c][iteration] > maxCorrectNum:
+                    maxCorrectNum = correctNum[c][iteration]
+                    maxC = c
+                    maxIter = iteration
+                elif correctNum[c][iteration] == maxCorrectNum:
+                    if c < maxC:
+                        maxC = c
+                        maxIter = iteration
+        self.weights = newWeights[maxC][maxIter].copy()
 
     def classify(self, data ):
         """

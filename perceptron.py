@@ -60,6 +60,8 @@ class PerceptronClassifier:
         # training = {trainingLabels[i]:trainingData[i] for i in range(len(trainingData))}
         # shuffle(trainingLabels, lambda: 0)
         # trainingData = [training[trainingLabels[i]] for i in range(len(trainingLabels))]
+        newWeights = util.Counter()
+        correctNum = util.Counter()
         for iteration in range(self.max_iterations):
             print "Starting iteration ", iteration, "..."
             for i in range(len(trainingData)):
@@ -73,6 +75,15 @@ class PerceptronClassifier:
                 if guess != trainingLabels[i]:
                     self.weights[trainingLabels[i]] += feat
                     self.weights[guess] -= feat
+
+            correctNum[iteration] = 0
+            guesses = self.classify(validationData)
+            for y, y_Pr in zip(validationLabels, guesses):
+                if y == y_Pr:
+                    correctNum[iteration] += 1
+            newWeights[iteration] = self.weights.copy()
+        bestIteration = correctNum.argMax()
+        self.weights = newWeights[bestIteration]
 
 
     def classify(self, data ):
