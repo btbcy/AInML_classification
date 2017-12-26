@@ -82,19 +82,51 @@ def enhancedFeatureExtractorDigit(datum):
 
     "*** YOUR CODE HERE ***"
 
+    def bfs_loop(whitePix):
+        if len(whitePix) == 0:
+            return 0
+        initNode = whitePix[0]
+        whitePix.remove(initNode)
+        explored = [initNode]
+        toVisit = util.Queue()
+        toVisit.push(initNode)
+        while not toVisit.isEmpty():
+            currentNode = toVisit.pop()
+            successors = []
+            neighborhood = [(currentNode[0], currentNode[1] + 1), \
+                    (currentNode[0], currentNode[1] - 1), \
+                    (currentNode[0] - 1, currentNode[1]), \
+                    (currentNode[0] + 1, currentNode[1])]
+            for node in neighborhood:
+                if node in whitePix:
+                    successors.append(node)
+            for nextNode in successors:
+                if nextNode not in explored:
+                    explored.append(nextNode)
+                    toVisit.push(nextNode)
+                    whitePix.remove(nextNode)
+        return len(whitePix)
+
     pix = datum.getPixels()
     pixSize = DIGIT_DATUM_WIDTH * DIGIT_DATUM_HEIGHT
     digitNum = 0
+    whitePix = []
     for x in range(DIGIT_DATUM_WIDTH):
         for y in range(DIGIT_DATUM_HEIGHT):
+            if pix[x][y] == 0:
+                whitePix.append((x, y))
             digitNum += pix[x][y]
 
-    for x in range(1, DIGIT_DATUM_WIDTH - 1):
-        for y in range(1, DIGIT_DATUM_HEIGHT - 1):
-            if pix[x-1][y] > 0 or pix[x+1][y] > 0 or pix[x][y] > 0 or pix[x][y-1] > 0 or pix[x][y+1] > 0:
-                features['empty_region', x, y] = 1
-            else:
-                features['empty_region', x, y] = 0
+    holeNum = bfs_loop(whitePix)
+    for i in range(10):
+        features['holeNum_2_' + str(i)] = int(holeNum > 0)
+
+    # for x in range(1, DIGIT_DATUM_WIDTH - 1):
+    #     for y in range(1, DIGIT_DATUM_HEIGHT - 1):
+    #         if pix[x-1][y] > 0 or pix[x+1][y] > 0 or pix[x][y] > 0 or pix[x][y-1] > 0 or pix[x][y+1] > 0:
+    #             features['empty_region', x, y] = 1
+    #         else:
+    #             features['empty_region', x, y] = 0
 
     for x in range(DIGIT_DATUM_WIDTH):
         hasDig = sum([pix[x][y] for y in range(DIGIT_DATUM_HEIGHT)]) > 0
@@ -160,9 +192,9 @@ def enhancedFeatureExtractorDigit(datum):
     for x in range(DIGIT_DATUM_WIDTH):
         for y in range(DIGIT_DATUM_HEIGHT / 2, DIGIT_DATUM_HEIGHT):
             lowerNum += pix[x][y]
-    upper_ratio = upperNum * 1.0 / digitNum
-    for i in range(5):
-        features['upper_ratio_' + str(i)] = 1 if upper_ratio > 0.42 else 0
+    # upper_ratio = upperNum * 1.0 / digitNum
+    # for i in range(1):
+    #     features['upper_ratio_' + str(i)] = 1 if upper_ratio > 0.42 else 0
     horsy_ratio = (upperNum - lowerNum) / digitNum
     for i in range(10):
         features['horizontal_sy_' + str(i)] = 1 if horsy_ratio > -0.15 and horsy_ratio < 0.1 else 0
@@ -178,22 +210,22 @@ def enhancedFeatureExtractorDigit(datum):
     for i in range(10):
         features['vertical_sy_' + str(i)] = 1 if versy_ratio > -0.25 and versy_ratio < 0.05 else 0
 
-    leftlowNum, rightupNum = 0.0, 0.0
-    for x in range(DIGIT_DATUM_WIDTH / 2):
-        for y in range(DIGIT_DATUM_HEIGHT / 2):
-            leftlowNum += pix[x][y]
-    for x in range(DIGIT_DATUM_WIDTH / 2, DIGIT_DATUM_WIDTH):
-        for y in range(DIGIT_DATUM_HEIGHT / 2, DIGIT_DATUM_HEIGHT):
-            rightupNum += pix[x][y]
-    leftlow_ratio = leftlowNum * 1.0 / digitNum
-    for i in range(10):
-        features['leftlow_' + str(i)] = 1 if leftlow_ratio > 0.8 else 0
-    rightupNum_ratio = rightupNum * 1.0 / digitNum
-    for i in range(5):
-        features['rightup_' + str(i)] = 1 if rightupNum_ratio < 0.42 else 0
-    llru_ratio = (leftlowNum - rightupNum) / digitNum
-    for i in range(10):
-        features['llru_' + str(i)] = 1 if llru_ratio > -0.18 else 0
+    # leftlowNum, rightupNum = 0.0, 0.0
+    # for x in range(DIGIT_DATUM_WIDTH / 2):
+    #     for y in range(DIGIT_DATUM_HEIGHT / 2):
+    #         leftlowNum += pix[x][y]
+    # for x in range(DIGIT_DATUM_WIDTH / 2, DIGIT_DATUM_WIDTH):
+    #     for y in range(DIGIT_DATUM_HEIGHT / 2, DIGIT_DATUM_HEIGHT):
+    #         rightupNum += pix[x][y]
+    # leftlow_ratio = leftlowNum * 1.0 / digitNum
+    # for i in range(1):
+    #     features['leftlow_' + str(i)] = 1 if leftlow_ratio > 0.8 else 0
+    # rightupNum_ratio = rightupNum * 1.0 / digitNum
+    # for i in range(1):
+    #     features['rightup_' + str(i)] = 1 if rightupNum_ratio < 0.42 else 0
+    # llru_ratio = (leftlowNum - rightupNum) / digitNum
+    # for i in range(1):
+    #     features['llru_' + str(i)] = 1 if llru_ratio > -0.18 else 0
 
     return features
 
@@ -242,7 +274,7 @@ def enhancedPacmanFeatures(state, action):
     """
     features = util.Counter()
     "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+
     return features
 
 
