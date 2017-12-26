@@ -124,9 +124,9 @@ def enhancedFeatureExtractorDigit(datum):
     # for x in range(1, DIGIT_DATUM_WIDTH - 1):
     #     for y in range(1, DIGIT_DATUM_HEIGHT - 1):
     #         if pix[x-1][y] > 0 or pix[x+1][y] > 0 or pix[x][y] > 0 or pix[x][y-1] > 0 or pix[x][y+1] > 0:
-    #             features['empty_region', x, y] = 1
-    #         else:
     #             features['empty_region', x, y] = 0
+    #         else:
+    #             features['empty_region', x, y] = 1
 
     for x in range(DIGIT_DATUM_WIDTH):
         hasDig = sum([pix[x][y] for y in range(DIGIT_DATUM_HEIGHT)]) > 0
@@ -274,6 +274,50 @@ def enhancedPacmanFeatures(state, action):
     """
     features = util.Counter()
     "*** YOUR CODE HERE ***"
+    state = state.generatePacmanSuccessor(action)
+
+    position = state.getPacmanPosition()
+    foodList = state.getFood().asList()
+    capsules = state.getCapsules()
+    ghostStates = state.getGhostStates()
+    scaredGhosts = [ghost for ghost in ghostStates if ghost.scaredTimer > 0]
+    normalGhosts = [ghost for ghost in ghostStates if ghost.scaredTimer == 0]
+    nearestScaredGhost = min([util.manhattanDistance(position, ghost.getPosition()) for ghost in scaredGhosts]) if scaredGhosts else 0
+    nearestNormalGhost = min([util.manhattanDistance(position, ghost.getPosition()) for ghost in normalGhosts]) if normalGhosts else 0
+    nearestCapsule = min([util.manhattanDistance(position, cap) for cap in capsules]) if capsules else 0
+    nearestFood = min([util.manhattanDistance(position, food) for food in foodList]) if foodList else 0
+
+    WEIGHT_NORMAL_GHOST = 5.0
+    WEIGHT_SCARED_GHOST = 100.0
+    WEIGHT_FOOD = 10.0
+    WEIGHT_CAPSULE = 30.0
+
+    score = state.getScore()
+    if scaredGhosts and nearestScaredGhost > 0:
+        score += WEIGHT_SCARED_GHOST / nearestScaredGhost
+    if normalGhosts and nearestNormalGhost > 0:
+        score -= WEIGHT_NORMAL_GHOST / nearestNormalGhost
+    if capsules:
+        score += WEIGHT_CAPSULE / nearestCapsule
+    if foodList:
+        score += WEIGHT_FOOD / nearestFood
+    features['score'] = score
+    #if scaredGhosts and nearestScaredGhost > 0:
+    #    features['scared_ghost'] = WEIGHT_SCARED_GHOST / nearestScaredGhost
+    #else:
+    #    features['scared_ghost'] = 0
+    #if normalGhosts and nearestNormalGhost > 0:
+    #    features['normal_ghost'] = -WEIGHT_NORMAL_GHOST / nearestNormalGhost
+    #else:
+    #    features['normal_ghost'] = 0
+    #if capsules:
+    #    features['capsule'] = WEIGHT_CAPSULE / nearestCapsule
+    #else:
+    #    features['capsule'] = 0
+    #if foodList:
+    #    features['nearestFood'] = WEIGHT_FOOD / nearestFood
+    #else:
+    #    features['nearestFood'] = 0
 
     return features
 
